@@ -13,6 +13,16 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.hortonworks.orendainx</groupId>
+      <artifactId>trucking-simulator_${scala.major.version}</artifactId>
+      <version>0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_${scala.major.version}</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.nifi</groupId>
       <artifactId>nifi-api</artifactId>
     </dependency>
