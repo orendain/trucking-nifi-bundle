@@ -4,7 +4,7 @@
 
   <groupId>com.hortonworks.orendainx</groupId>
   <artifactId>trucking-nifi-bundle</artifactId>
-  <version>0.1</version>
+  <version>${trucking.nifi.version}</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -14,17 +14,18 @@
   </parent>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <trucking.nifi.version>0.3</trucking.nifi.version>
+    <trucking.simulator.version>0.3</trucking.simulator.version>
     <scala.version>2.11.8</scala.version>
     <scala.major.version>2.11</scala.major.version>
-    <akka.version>2.4.14</akka.version>
     <typesafe.config.version>1.3.1</typesafe.config.version>
+
     <maven.compiler.version>3.6.0</maven.compiler.version>
     <nifi.nar.maven.version>1.1.0</nifi.nar.maven.version>
-
     <scala.maven.version>3.2.1</scala.maven.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <modules>

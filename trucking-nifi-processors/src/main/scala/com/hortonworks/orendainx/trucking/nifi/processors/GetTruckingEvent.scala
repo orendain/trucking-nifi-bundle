@@ -4,6 +4,7 @@ import java.io._
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 
+import com.hortonworks.orendainx.trucking.shared.models.{TrafficData, TruckEvent, TruckingData}
 import org.apache.nifi.components.PropertyDescriptor
 import org.apache.nifi.processor.io.{InputStreamCallback, OutputStreamCallback}
 import org.apache.nifi.processor.{AbstractProcessor, Relationship}
@@ -12,22 +13,19 @@ import org.apache.nifi.annotation.behavior._
 import org.apache.nifi.annotation.documentation.{CapabilityDescription, SeeAlso, Tags}
 import org.apache.nifi.annotation.lifecycle.{OnRemoved, OnScheduled, OnShutdown}
 import com.typesafe.config.ConfigFactory
-import com.hortonworks.orendainx.trucking.simulator.NiFiSimulator
-import akka.actor.Inbox
-import com.hortonworks.orendainx.trucking.shared.models.Event
-import com.hortonworks.orendainx.trucking.simulator.coordinators.ManualCoordinator
-import com.hortonworks.orendainx.trucking.simulator.transmitters.AccumulateTransmitter
-import com.typesafe.scalalogging.Logger
 import org.apache.nifi.logging.ComponentLog
+import com.hortonworks.orendainx.trucking.simulator.NiFiSimulator
+import com.hortonworks.orendainx.trucking.simulator.coordinators.ManualCoordinator
 
 import scala.concurrent.duration._
 
+/**
+  * @author Edgar Orendain <edgar@orendainx.com>
+  */
 @Tags(Array("trucking", "event", "data" , "generator", "simulator", "iot"))
 @CapabilityDescription("Generates event data for a trucking application.")
 @WritesAttributes(Array(
-  new WritesAttribute(attribute = "test.1", description = "Test 1"),
-  new WritesAttribute(attribute = "test.2", description = "Test 2"),
-  new WritesAttribute(attribute = "test.3", description = "Test 3")
+  new WritesAttribute(attribute = "Data Type", description = "The type of TruckingData this flowfile holds (i.e. \"TruckEvent\", \"TrafficData\").")
 ))
 @InputRequirement(InputRequirement.Requirement.INPUT_FORBIDDEN)
 @TriggerSerially
@@ -40,10 +38,9 @@ class GetTruckingEvent extends AbstractProcessor with GetTruckingEventProperties
 
   private lazy val config = ConfigFactory.load()
   private lazy val simulator = NiFiSimulator()
-  private lazy val inbox = Inbox.create(simulator.system)
 
   override def init(context: ProcessorInitializationContext): Unit = {
-    inbox.send(simulator.coordinator, ManualCoordinator.Tick)
+    simulator.coordinator ! ManualCoordinator.Tick
     log = context.getLogger
   }
 
@@ -51,27 +48,31 @@ class GetTruckingEvent extends AbstractProcessor with GetTruckingEventProperties
 
     //simulator.coordinator ! ManualCoordinator.Tick
 
-    // Fetch the results to be retrieved by onTrigger's next invocation
-    inbox.send(simulator.transmitter, AccumulateTransmitter.Fetch)
-
     // TODO: don't wait an entire second, should return immediately (ideally)
     log.debug(s"Attempting to receive")
-    val lst = inbox.receive(1.second)
+    //val lst = simulator.inbox.receive(1.second)
+    val lst = simulator.fetch()
     log.debug(s"Received: $lst")
 
-    lst match {
-      case events: List[_] =>
-        events.foreach { e =>
-          val event = e.asInstanceOf[Event]
+    //lst match {
+    lst.foreach { event =>
+      //case events: List[_] =>
+        //events.foreach { e =>
+          //val event = e.asInstanceOf[TruckingData]
+          /*
+          log.debug(s"This e: ${e}")
+          val event = e match {
+            case ev: TruckEvent => ev
+            case ev: TrafficData => ev
+          }*/
           //log.debug(s"This ev: ${event.asInstanceOf[Event]}")
           log.debug(s"This ev: ${event}")
           var flowFile = session.create()
-          flowFile = session.putAttribute(flowFile, "testAttr1", "1")
-          flowFile = session.putAttribute(flowFile, "testAttr2", "2")
+          flowFile = session.putAttribute(flowFile, "Data Type", event.name)
 
           flowFile = session.write(flowFile, new OutputStreamCallback {
             override def process(outputStream: OutputStream) = {
-              outputStream.write("outputText".getBytes(StandardCharsets.UTF_8))
+              outputStream.write(event.toCSV.getBytes(StandardCharsets.UTF_8))
             }
           })
 
@@ -79,10 +80,11 @@ class GetTruckingEvent extends AbstractProcessor with GetTruckingEventProperties
           //session.getProvenanceReporter.receive(flowFile, "What?")
           session.transfer(flowFile, RelSuccess)
           session.commit()
-        }
+        //}
     }
+    //}
 
-    inbox.send(simulator.coordinator, ManualCoordinator.Tick)
+    simulator.coordinator ! ManualCoordinator.Tick
 
     //simulator.coordinator ! ManualCoordinator.Tick
 
