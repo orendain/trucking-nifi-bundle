@@ -7,9 +7,9 @@ trait GetTruckingEventProperties {
   val ExampleProperty =
     new PropertyDescriptor.Builder()
       .name("Example Property")
-      .description("Whatever the property does")
+      .description("Just an example property for now, move along friend!")
       .required(true)
-      .defaultValue("something")
+      .defaultValue("Something")
       .expressionLanguageSupported(true)
       .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
       .build
