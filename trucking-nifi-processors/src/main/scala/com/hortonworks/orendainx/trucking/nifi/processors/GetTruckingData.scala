@@ -1,6 +1,6 @@
 package com.hortonworks.orendainx.trucking.nifi.processors
 
-import java.io._
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
 import com.hortonworks.orendainx.trucking.simulator.TickAndFetchSimulator
@@ -10,26 +10,24 @@ import org.apache.nifi.annotation.documentation.{CapabilityDescription, Tags}
 import org.apache.nifi.annotation.lifecycle.{OnRemoved, OnShutdown}
 import org.apache.nifi.components.PropertyDescriptor
 import org.apache.nifi.logging.ComponentLog
-import org.apache.nifi.processor.io.OutputStreamCallback
 import org.apache.nifi.processor._
+import org.apache.nifi.processor.io.OutputStreamCallback
 
 /**
   * @author Edgar Orendain <edgar@orendainx.com>
   */
-@Tags(Array("trucking", "event", "data" , "generator", "simulator", "iot"))
-@CapabilityDescription("Generates event data for a trucking application.")
+@Tags(Array("trucking", "data", "event", "generator", "simulator", "iot"))
+@CapabilityDescription("Generates data for a trucking application. Sample project <a href=\"https://github.com/orendain/trucking-nifi-bundle\">found here</a>")
 @WritesAttributes(Array(
-  new WritesAttribute(attribute = "dataType", description = "The type of TruckingData this flowfile holds (i.e. \"TruckEvent\", \"TrafficData\").")
+  new WritesAttribute(attribute = "dataType", description = "The class name of the of the TruckingData this flowfile carries (e.g. \"TruckData\" or \"TrafficData\").")
 ))
 @InputRequirement(InputRequirement.Requirement.INPUT_FORBIDDEN)
 @TriggerSerially
-class GetTruckingEvent extends AbstractProcessor with GetTruckingEventProperties
-    with GetTruckingEventRelationships {
+class GetTruckingData extends AbstractProcessor with GetTruckingDataProperties with GetTruckingDataRelationships {
 
   import scala.collection.JavaConverters._
 
   private var log: ComponentLog = _
-
   private lazy val config = ConfigFactory.load()
   private lazy val simulator = TickAndFetchSimulator()
 
@@ -50,7 +48,7 @@ class GetTruckingEvent extends AbstractProcessor with GetTruckingEventProperties
       log.debug(s"Processing data: $data")
 
       var flowFile = session.create()
-      flowFile = session.putAttribute(flowFile, "dataType", data.name)
+      flowFile = session.putAttribute(flowFile, "dataType", data.getClass.getSimpleName)
 
       flowFile = session.write(flowFile, new OutputStreamCallback {
         override def process(outputStream: OutputStream) = {
@@ -59,7 +57,7 @@ class GetTruckingEvent extends AbstractProcessor with GetTruckingEventProperties
       })
 
       session.getProvenanceReporter.route(flowFile, RelSuccess)
-      //session.getProvenanceReporter.receive(flowFile, "Huh?")
+      //TODO: This does what, session.getProvenanceReporter.receive(flowFile, "Huh?")
       session.transfer(flowFile, RelSuccess)
       session.commit()
     }

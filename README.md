@@ -9,6 +9,6 @@ cd trucking-nifi-bundle
 mvn package
 ```
 
-A `nar` file is built and saved to `./nifi-trucking-nar/target/nifi-trucking-nar-0.3.nar`.
+A `nar` file is built and saved to `./nifi-trucking-nar/target/nifi-trucking-nar-0.3.1.nar`.
 
-Take this file and upload it to your NiFi library.  Upon a NiFi restart, you should see a `GetTruckingEvent` processor included in your NiFi instance.
+Take this file and upload it to your NiFi library.  Upon a NiFi restart, you should see a `GetTruckingData` processor included in your NiFi instance.

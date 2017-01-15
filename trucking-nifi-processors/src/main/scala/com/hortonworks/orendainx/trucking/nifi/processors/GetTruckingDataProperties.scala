@@ -3,7 +3,7 @@ package com.hortonworks.orendainx.trucking.nifi.processors
 import org.apache.nifi.components.PropertyDescriptor
 import org.apache.nifi.processor.util.StandardValidators
 
-trait GetTruckingEventProperties {
+trait GetTruckingDataProperties {
   val ExampleProperty =
     new PropertyDescriptor.Builder()
       .name("Example Property")
